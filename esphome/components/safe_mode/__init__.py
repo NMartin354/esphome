@@ -6,6 +6,7 @@ from esphome.const import (
     CONF_ID,
     CONF_NUM_ATTEMPTS,
     CONF_REBOOT_TIMEOUT,
+    CONF_ATTEMPT_TIMEOUT,
     CONF_SAFE_MODE,
     CONF_TRIGGER_ID,
     KEY_PAST_SAFE_MODE,
@@ -39,6 +40,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(
                 CONF_REBOOT_TIMEOUT, default="5min"
             ): cv.positive_time_period_milliseconds,
+            cv.Optional(
+                CONF_ATTEMPT_TIMEOUT, default="5min"
+            ): cv.positive_time_period_milliseconds,
             cv.Optional(CONF_ON_SAFE_MODE): automation.validate_automation(
                 {
                     cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SafeModeTrigger),
@@ -63,7 +67,7 @@ async def to_code(config):
         await automation.build_automation(trigger, [], conf)
 
     condition = var.should_enter_safe_mode(
-        config[CONF_NUM_ATTEMPTS], config[CONF_REBOOT_TIMEOUT]
+        config[CONF_NUM_ATTEMPTS], config[CONF_REBOOT_TIMEOUT], config[CONF_ATTEMPT_TIMEOUT]
     )
     cg.add(RawExpression(f"if ({condition}) return"))
     CORE.data[CONF_SAFE_MODE] = {}
